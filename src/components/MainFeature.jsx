@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
+import TextAlign from '@tiptap/extension-text-align';
+import { useMemo } from 'react';
 import getIcon from '../utils/iconUtils';
 
 const MainFeature = () => {
@@ -14,11 +19,11 @@ const MainFeature = () => {
   
   const [blocks, setBlocks] = useState([
     { id: '1', type: 'heading', content: 'Getting Started with ThoughtSpace', level: 1 },
-    { id: '2', type: 'paragraph', content: 'Welcome to your new workspace. Use ThoughtSpace to organize your ideas, projects, and knowledge.' },
+    { id: '2', type: 'paragraph', content: '<p>Welcome to your new workspace. Use ThoughtSpace to organize your ideas, projects, and knowledge.</p>' },
     { id: '3', type: 'todo', content: 'Create my first page', completed: true },
     { id: '4', type: 'todo', content: 'Set up a database', completed: false },
     { id: '5', type: 'todo', content: 'Invite team members', completed: false },
-    { id: '6', type: 'paragraph', content: 'Click on any block to edit it, or use the + button to add new blocks.' },
+    { id: '6', type: 'paragraph', content: '<p>Click on any block to edit it, or use the + button to add new blocks.</p>' },
   ]);
   
   const [activeBlock, setActiveBlock] = useState(null);
@@ -26,6 +31,7 @@ const MainFeature = () => {
   const [blockType, setBlockType] = useState('paragraph');
   const [isAddingBlock, setIsAddingBlock] = useState(false);
   const [isToolbarOpen, setIsToolbarOpen] = useState(false);
+  const [activeFormatting, setActiveFormatting] = useState({});
   const [showBlockTypeMenu, setShowBlockTypeMenu] = useState(false);
   
   // Icon declarations
@@ -142,6 +148,87 @@ const MainFeature = () => {
     toast.success("Page saved successfully!");
   };
 
+  // Text Editor Component
+  const TextEditor = ({ content, onChange, autoFocus = false, placeholder = "Type something..." }) => {
+    const editor = useEditor({
+      extensions: [
+        StarterKit,
+        Underline,
+        TextAlign.configure({
+          types: ['heading', 'paragraph'],
+          alignments: ['left', 'center', 'right'],
+        }),
+      ],
+      content: content,
+      onUpdate: ({ editor }) => {
+        onChange(editor.getHTML());
+      },
+      autofocus: autoFocus,
+      editorProps: {
+        attributes: {
+          class: 'focus:outline-none prose dark:prose-invert prose-sm sm:prose-base max-w-none',
+        },
+      },
+    });
+
+    useEffect(() => {
+      if (!editor) return;
+
+      // Update formatting state
+      setActiveFormatting({
+        bold: editor.isActive('bold'),
+        italic: editor.isActive('italic'),
+        underline: editor.isActive('underline'),
+        heading1: editor.isActive('heading', { level: 1 }),
+        heading2: editor.isActive('heading', { level: 2 }),
+        heading3: editor.isActive('heading', { level: 3 }),
+        alignLeft: editor.isActive({ textAlign: 'left' }),
+        alignCenter: editor.isActive({ textAlign: 'center' }),
+        alignRight: editor.isActive({ textAlign: 'right' }),
+      });
+    }, [editor]);
+
+    if (!editor) {
+      return null;
+    }
+
+    return (
+      <EditorContent editor={editor} />
+    );
+  };
+  
+  // Apply formatting for active editor
+  const applyFormatting = (formatType) => {
+    // Find block content containing active editor
+    const blockToEdit = blocks.find(block => block.id === activeBlock);
+    if (!blockToEdit) return;
+    
+    // Create a temporary div to hold the HTML content
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = blockToEdit.content;
+    
+    // Handle different format types
+    switch (formatType) {
+      case 'bold':
+        // Apply bold formatting
+        break;
+      case 'italic':
+        // Apply italic formatting
+        break;
+      case 'underline':
+        // Apply underline formatting
+        break;
+      case 'link':
+        // Apply link formatting
+        break;
+      // Additional cases for other formatting options
+    }
+    
+    // Update the block content with the formatted HTML
+    updateBlockContent(activeBlock, tempDiv.innerHTML);
+    setActiveFormatting({ ...activeFormatting, [formatType]: !activeFormatting[formatType] });
+  };
+
   return (
     <div className="bg-white dark:bg-surface-800 rounded-xl shadow-card overflow-hidden">
       {/* Document Header */}
@@ -185,40 +272,40 @@ const MainFeature = () => {
               className="hidden md:flex items-center gap-2 mt-2 overflow-hidden"
             >
               <div className="bg-surface-100 dark:bg-surface-700 rounded-lg p-1 flex items-center gap-1">
-                <button className="p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600">
+                <button onClick={() => applyFormatting('bold')} className={`p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600 ${activeFormatting.bold ? 'bg-primary/20' : ''}`}>
                   <BoldIcon className="w-4 h-4" />
                 </button>
-                <button className="p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600">
+                <button onClick={() => applyFormatting('italic')} className={`p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600 ${activeFormatting.italic ? 'bg-primary/20' : ''}`}>
                   <ItalicIcon className="w-4 h-4" />
                 </button>
-                <button className="p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600">
+                <button onClick={() => applyFormatting('underline')} className={`p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600 ${activeFormatting.underline ? 'bg-primary/20' : ''}`}>
                   <UnderlineIcon className="w-4 h-4" />
                 </button>
-                <button className="p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600">
+                <button onClick={() => applyFormatting('link')} className={`p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600 ${activeFormatting.link ? 'bg-primary/20' : ''}`}>
                   <LinkIcon className="w-4 h-4" />
                 </button>
               </div>
               
               <div className="bg-surface-100 dark:bg-surface-700 rounded-lg p-1 flex items-center gap-1">
-                <button className="p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600">
+                <button onClick={() => applyFormatting('alignLeft')} className={`p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600 ${activeFormatting.alignLeft ? 'bg-primary/20' : ''}`}>
                   <AlignLeftIcon className="w-4 h-4" />
                 </button>
-                <button className="p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600">
+                <button onClick={() => applyFormatting('alignCenter')} className={`p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600 ${activeFormatting.alignCenter ? 'bg-primary/20' : ''}`}>
                   <AlignCenterIcon className="w-4 h-4" />
                 </button>
-                <button className="p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600">
+                <button onClick={() => applyFormatting('alignRight')} className={`p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600 ${activeFormatting.alignRight ? 'bg-primary/20' : ''}`}>
                   <AlignRightIcon className="w-4 h-4" />
                 </button>
               </div>
               
               <div className="bg-surface-100 dark:bg-surface-700 rounded-lg p-1 flex items-center gap-1">
-                <button className="p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600">
+                <button onClick={() => applyFormatting('heading1')} className={`p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600 ${activeFormatting.heading1 ? 'bg-primary/20' : ''}`}>
                   <Heading1Icon className="w-4 h-4" />
                 </button>
-                <button className="p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600">
+                <button onClick={() => applyFormatting('heading2')} className={`p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600 ${activeFormatting.heading2 ? 'bg-primary/20' : ''}`}>
                   <Heading2Icon className="w-4 h-4" />
                 </button>
-                <button className="p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600">
+                <button onClick={() => applyFormatting('heading3')} className={`p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-600 ${activeFormatting.heading3 ? 'bg-primary/20' : ''}`}>
                   <Heading3Icon className="w-4 h-4" />
                 </button>
               </div>
@@ -339,15 +426,13 @@ const MainFeature = () => {
               {block.type === 'paragraph' && (
                 <div>
                   {activeBlock === block.id ? (
-                    <textarea
-                      value={block.content}
-                      onChange={(e) => updateBlockContent(block.id, e.target.value)}
-                      className="w-full bg-transparent focus:outline-none resize-none"
-                      rows={Math.max(2, block.content.split('\n').length)}
+                    <TextEditor
+                      content={block.content}
+                      onChange={(html) => updateBlockContent(block.id, html)}
                       autoFocus
                     />
                   ) : (
-                    <div className="whitespace-pre-wrap">{block.content}</div>
+                    <div className="prose dark:prose-invert prose-sm sm:prose-base max-w-none" dangerouslySetInnerHTML={{ __html: block.content }}></div>
                   )}
                 </div>
               )}
@@ -456,7 +541,7 @@ const MainFeature = () => {
             </div>
             
             <textarea
-              value={newBlockContent}
+              value={blockType === 'paragraph' ? newBlockContent.replace(/<[^>]*>/g, '') : newBlockContent}
               onChange={(e) => setNewBlockContent(e.target.value)}
               placeholder={`Type your ${blockType} content here...`}
               className="w-full p-3 rounded-lg border border-surface-200 dark:border-surface-700 focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-surface-800"
@@ -468,9 +553,17 @@ const MainFeature = () => {
               <button 
                 onClick={saveNewBlock}
                 className="btn btn-primary"
-                disabled={!newBlockContent.trim()}
+                disabled={!newBlockContent.trim() && blockType !== 'paragraph'}
               >
-                Add Block
+                {blockType === 'paragraph' ? (
+                  <span onClick={() => {
+                    // For paragraph blocks, wrap content in paragraph tags if not already formatted
+                    if (!newBlockContent.includes('<p>')) {
+                      setNewBlockContent(`<p>${newBlockContent}</p>`);
+                    }
+                    saveNewBlock();
+                  }}>Add Block</span>
+                ) : "Add Block"}
               </button>
             </div>
           </div>

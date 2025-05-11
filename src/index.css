@@ -89,6 +89,30 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  
+  /* TipTap Editor Styles */
+  .ProseMirror {
+    @apply outline-none min-h-[100px] p-1;
+  }
+  
+  .ProseMirror p {
+    @apply mb-2;
+  }
+  
+  .ProseMirror p.is-editor-empty:first-child::before {
+    @apply text-surface-400 float-left h-0 pointer-events-none;
+    content: attr(data-placeholder);
+  }
+  
+  .text-left {
+    @apply text-left;
+  }
+  .text-center {
+    @apply text-center;
+  }
+  .text-right {
+    @apply text-right;
+  }
   }
 }
 

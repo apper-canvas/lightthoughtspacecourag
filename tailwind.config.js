@@ -44,9 +44,40 @@ export default {
       borderRadius: {
         'xl': '0.75rem',
         '2xl': '1rem'
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: '65ch',
+            color: 'inherit',
+            a: {
+              color: 'inherit',
+              textDecoration: 'underline',
+              fontWeight: '500',
+            },
+            strong: {
+              fontWeight: '600',
+            },
+            h1: {
+              fontWeight: '700',
+            },
+            h2: {
+              fontWeight: '600',
+            },
+            h3: {
+              fontWeight: '600',
+            },
+            code: {
+              color: 'inherit',
+              backgroundColor: 'rgba(0, 0, 0, 0.1)',
+              padding: '0.2em 0.4em',
+              borderRadius: '0.25rem',
+            },
+          },
+        },
       }
     }
   },
-  plugins: [],
+  plugins: [require('@tailwindcss/typography')],
   darkMode: 'class',
 }
