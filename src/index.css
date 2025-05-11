@@ -89,6 +89,7 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
   
   /* TipTap Editor Styles */
   .ProseMirror {
@@ -112,7 +113,6 @@
   }
   .text-right {
     @apply text-right;
-  }
   }
 }
 
